@@ -11,7 +11,6 @@ RUN pipenv install --system --deploy
 RUN mkdir /app
 WORKDIR /app
 COPY ./app /app
-COPY ./.flake8 /.flake8
 
 RUN adduser -D newuser
 USER newuser
