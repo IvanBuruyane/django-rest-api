@@ -2,5 +2,5 @@
 exclude =
   migrations,
   __pycache__,
-  manage.py,
-  settings.py
+  app/manage.py,
+  app/app/settings.py
