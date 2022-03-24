@@ -4,11 +4,14 @@ from django.contrib.auth.models import (
     BaseUserManager,
     PermissionsMixin,
 )
+from django.core.validators import validate_email
 
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        normalized_email = self.normalize_email(email)
+        validate_email(normalized_email)
+        user = self.model(email=normalized_email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
