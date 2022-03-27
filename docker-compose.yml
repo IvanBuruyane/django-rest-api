@@ -10,3 +10,26 @@ services:
       - ./app:/app
     command:
       - sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: app
+      DB_USER: postgres
+      DB_PASS: /run/secrets/db_password
+    depends_on:
+      - postgres
+    secrets:
+      - postgress_pass
+
+  postgres:
+    image: postgres:10-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRESS_PASSWORD: /run/secrets/postgress_pass
+    secrets:
+      - postgress_pass
+
+
+secrets:
+  postgress_pass:
+    file: postgress_pass.txt
