@@ -38,6 +38,7 @@ def test_new_user_email_normalized() -> None:
         "   ",
     ],
 )
+@pytest.mark.django_db
 def test_new_user_invalid_email(invalid_email: str) -> None:
     """Test creating user with empty email raises error"""
     with pytest.raises(ValidationError):
