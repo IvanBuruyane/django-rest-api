@@ -16,15 +16,15 @@ def setup_admin(client):
     return {"admin_user": admin_user, "user": user}
 
 
-@pytest.fixture(scope="session", autouse=True)
-def django_db_setup():
-
-    run_sql("DROP DATABASE IF EXISTS test_postgres_db")
-    run_sql("CREATE DATABASE test_postgres_db")
-
-    yield
-
-    for connection in connections.all():
-        connection.close()
-
-    run_sql("DROP DATABASE test_postgres_db")
+# @pytest.fixture(scope="session", autouse=True)
+# def django_db_setup():
+#
+#     run_sql("DROP DATABASE IF EXISTS test_postgres_db")
+#     run_sql("CREATE DATABASE test_postgres_db")
+#
+#     yield
+#
+#     for connection in connections.all():
+#         connection.close()
+#
+#     run_sql("DROP DATABASE test_postgres_db")

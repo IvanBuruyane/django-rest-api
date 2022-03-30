@@ -4,7 +4,6 @@ from django.db.utils import OperationalError
 from sys import stdout
 from django.db import connections
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-from django.conf import settings
 
 
 def run_sql(sql):
