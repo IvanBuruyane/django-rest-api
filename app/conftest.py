@@ -18,6 +18,7 @@ def setup_admin(client):
 
 # @pytest.fixture(scope="session", autouse=True)
 # def django_db_setup():
+#     wait_for_db()
 #
 #     run_sql("DROP DATABASE IF EXISTS test_postgres_db")
 #     run_sql("CREATE DATABASE test_postgres_db")
