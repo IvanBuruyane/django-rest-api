@@ -11,22 +11,10 @@ on:
 
 jobs:
   build:
-    container:
-      image: python:3.10.3-alpine
-#    runs-on: ubuntu-latest
-#    env:
-#      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
-    services:
-
-      postgres:
-        image: postgres:14-alpine
-        env:
-          POSTGRES_DB: app
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 123
-        ports:
-          - 5432:5432
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
     steps:
     - uses: actions/checkout@v2
@@ -43,4 +31,4 @@ jobs:
 #        docker-compose run --rm app sh -c "flake8"
     - name: Test with pytest
       run: |
-        docker-compose run --rm app sh -c "printenv && python manage.py wait_for_db && pytest core/tests/test_models.py -s -v"
+        docker-compose run --rm app sh -c "python manage.py wait_for_db && pytest -s -v"
