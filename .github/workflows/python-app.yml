@@ -38,6 +38,7 @@ jobs:
         python-version: "3.10"
     - name: Install docker-compose
       run: |
+        pip install docker
         pip install docker-compose
 
 #    - name: Check the linting
