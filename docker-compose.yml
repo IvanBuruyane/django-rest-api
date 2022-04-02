@@ -27,5 +27,5 @@ services:
       - POSTGRES_NAME=app
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123
-    depends_on:
-      - postgres
+#    depends_on:
+#      - postgres
