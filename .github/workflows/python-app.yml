@@ -27,6 +27,19 @@ jobs:
         ports:
           - 5432:5432
 
+      app:
+        build:
+          context: .
+        ports:
+          - 8000:8000
+        volumes:
+          - ./app:/app
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_NAME: app
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
