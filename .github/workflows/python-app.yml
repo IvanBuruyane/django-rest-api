@@ -28,7 +28,6 @@ jobs:
         ports:
           - 5432:5432
 
-    runs-on:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
