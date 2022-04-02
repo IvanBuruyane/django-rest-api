@@ -11,8 +11,9 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    container:
+      image: python:3.10.3-alpine
+#    runs-on: ubuntu-latest
 #    env:
 #      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
@@ -27,19 +28,7 @@ jobs:
         ports:
           - 5432:5432
 
-      app:
-        build:
-          context: .
-        ports:
-          - 8000:8000
-        volumes:
-          - ./app:/app
-        env:
-          POSTGRES_HOST: postgres
-          POSTGRES_NAME: app
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 123
-
+    runs-on:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
