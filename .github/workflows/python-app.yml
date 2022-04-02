@@ -20,10 +20,10 @@ jobs:
 
       postgres:
         image: postgres:14-alpine
-        environment:
-          - POSTGRES_DB=app
-          - POSTGRES_USER=postgres
-          - POSTGRES_PASSWORD=123
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123
         ports:
           - 5432:5432
 
