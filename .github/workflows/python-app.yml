@@ -16,6 +16,17 @@ jobs:
 #    env:
 #      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
+    services:
+
+      postgres:
+        image: postgres:14-alpine
+        environment:
+          - POSTGRES_DB=app
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=123
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
