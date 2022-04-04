@@ -7,8 +7,8 @@ ENV DJANGO_SETTINGS_MODULE=app.settings
 RUN pip install pipenv
 COPY ./Pipfile /Pipfile
 COPY ./Pipfile.lock /Pipfile.lock
-RUN apt install postgresql
-RUN apt install .tmp-build-deps gcc libc-dev linux-headers postgresql-dev
+RUN apt-get install postgresql
+RUN apt-get install .tmp-build-deps gcc libc-dev linux-headers postgresql-dev
 RUN pipenv install --system --deploy
 #RUN apk del .tmp-build-deps
 
