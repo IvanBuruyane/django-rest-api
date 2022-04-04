@@ -13,7 +13,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-#    env:
+    container: docker
+    #    env:
 #      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 #      POSTGRES_HOST: localhost
 
