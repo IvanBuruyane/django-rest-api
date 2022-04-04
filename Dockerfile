@@ -1,4 +1,4 @@
-FROM python:3.10.3-alpine
+FROM python
 MAINTAINER restlin1212
 
 ENV PYTHONUNBUFFERED 1
