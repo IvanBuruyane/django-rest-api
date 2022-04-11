@@ -10,14 +10,14 @@ services:
     volumes:
       - ./app:/app
     command:
-      sh -c "python manage.py wait_for_db &&
+      sh -c "python wait_for_postgres.py &&
       python manage.py migrate &&
       python manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - DB_NAME=app
       - DB_USER=postgres
-      - DB_PASS=supersecretpassword
+      - DB_PASS=${POSTGRES_PASSWORD}
     depends_on:
       - db
 
@@ -26,5 +26,5 @@ services:
     environment:
       - POSTGRES_DB=app
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=supersecretpassword
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 

@@ -1,29 +1,27 @@
 import logging
 import os
 from time import sleep, time
-
 import psycopg2
 
-check_timeout = 30
-check_interval = 2
-interval_unit = "second" if check_interval == 5 else "seconds"
-config = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASS"),
-    "host": os.getenv("DB_HOST"),
-}
 
-start_time = time()
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
+def pg_isready():
+    check_timeout = 30
+    check_interval = 2
+    interval_unit = "second" if check_interval == 5 else "seconds"
+    config = {
+        "dbname": os.getenv("DB_NAME"),
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASS"),
+        "host": os.getenv("DB_HOST"),
+    }
 
-
-def pg_isready(host, user, password, dbname):
+    start_time = time()
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.StreamHandler())
     while time() - start_time < check_timeout:
         try:
-            conn = psycopg2.connect(**vars())
+            conn = psycopg2.connect(**config)
             logger.info("Postgres is ready! ✨ 💅")
             conn.close()
             return True
@@ -35,4 +33,4 @@ def pg_isready(host, user, password, dbname):
     return False
 
 
-pg_isready(**config)
+pg_isready()
