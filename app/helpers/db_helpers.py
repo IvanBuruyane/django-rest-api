@@ -17,6 +17,7 @@ def run_sql(sql):
 def wait_for_db():
     stdout.write("Waiting for database...")
     db_connection = None
+    time.sleep(5)
     while not db_connection:
         try:
             db_connection = connections["default"]
