@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from test_data import TestData
 
 
 @pytest.mark.django_db
@@ -22,23 +23,7 @@ def test_new_user_email_normalized() -> None:
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "invalid_email",
-    [
-        None,
-        "example.com",
-        "A@b@c@domain.com",
-        "a”b(c)d,e:f;gi[j\k]l@domain.com",
-        "abc”test”email@domain.com",
-        "abc is”not\valid@domain.com",
-        "abc\ is\”not\valid@domain.com",
-        ".test@domain.com",
-        "test@domain..com",
-        "",
-        "   ",
-    ],
-)
-@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_email", TestData.INVALID_EMAILS)
 def test_new_user_invalid_email(invalid_email: str) -> None:
     """Test creating user with empty email raises error"""
     with pytest.raises(ValidationError):
