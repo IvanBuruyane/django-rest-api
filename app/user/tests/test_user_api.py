@@ -6,6 +6,7 @@ from test_data import TestData
 from helpers.test_helpers import random_string
 
 CREATE_USER_URL = reverse("user:create")
+TOKEN_URL = reverse('user:token')
 
 
 def create_user(**params):
@@ -33,7 +34,11 @@ class TestPublicUserAPI:
 
     def test_user_exists(self, client):
         """Test creating a user that already exists fails"""
-        payload = {"email": "test@londonappdev.com", "password": "testpass"}
+        payload = {
+            "email": "test@londonappdev.com",
+            "password": "testpass",
+            "name": "name",
+        }
         create_user(**payload)
         res = client.post(CREATE_USER_URL, payload)
 
@@ -59,3 +64,44 @@ class TestPublicUserAPI:
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         user_exists = get_user_model().objects.filter(email=email).exists()
         assert user_exists is False
+
+    def test_create_token_for_user(self, client):
+        """Test that a token is created for the user"""
+        payload = {
+            "email": "test@londonappdev.com",
+            "password": "testpass",
+            "name": "test_user",
+        }
+        create_user(**payload)
+        res = client.post(TOKEN_URL, payload)
+
+        assert "token" in res.data
+        assert res.status_code == status.HTTP_200_OK
+
+    def test_create_token_invalid_credentials(self, client):
+        """Test that token is not created if invalid credentials are given"""
+        create_user(email="test@londonappdev.com", password="testpass")
+        payload = {"email": "test@londonappdev.com", "password": "wrong"}
+        res = client.post(TOKEN_URL, payload)
+
+        assert "token" not in res.data
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_token_for_non_existing_user(self, client):
+        """Test that token is not created if user doens't exist"""
+        payload = {"email": "test@londonappdev.com", "password": "testpass"}
+        res = client.post(TOKEN_URL, payload)
+
+        assert "token" not in res.data
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize("param", ["email", "password"])
+    def test_create_token_without_parameter(self, client, param):
+        """Test that email and password are required"""
+        payload = {"email": "test@londonappdev.com", "password": "testpass"}
+        create_user(**payload)
+        payload.pop(param)
+        res = client.post(TOKEN_URL, payload)
+
+        assert "token" not in res.data
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
