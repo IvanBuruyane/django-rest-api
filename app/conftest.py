@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.db import connections
-from helpers.db_helpers import run_sql, wait_for_db
+from helpers.test_helpers import create_user
 
 
 @pytest.fixture(scope="function")
@@ -14,3 +13,16 @@ def setup_admin(client):
         email="test_user@londonappdev.com", password="123", name="Test User"
     )
     return {"admin_user": admin_user, "user": user}
+
+
+# @pytest.fixture(scope="function")
+# def create_and_authenticate_user(client):
+#     user = create_user(
+#         email="test@londonappdev.com",
+#         password="testpass",
+#         name="name",
+#     )
+#     client.login(username="test@londonappdev.com", password="testpass")
+#
+#
+#     return user

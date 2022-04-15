@@ -3,15 +3,15 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from test_data import TestData
-from helpers.test_helpers import random_string
+from helpers.test_helpers import (
+    random_string,
+    create_user,
+    create_and_authenticate_user,
+)
 
 CREATE_USER_URL = reverse("user:create")
-TOKEN_URL = reverse('user:token')
-
-
-def create_user(**params):
-    """Helper function to create new user"""
-    return get_user_model().objects.create_user(**params)
+TOKEN_URL = reverse("user:token")
+ME_URL = reverse("user:me")
 
 
 @pytest.mark.django_db
@@ -105,3 +105,53 @@ class TestPublicUserAPI:
 
         assert "token" not in res.data
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestPrivateUserApi:
+    """Test API requests that require authentication"""
+
+    def test_retrieve_user_unauthorized(self, client):
+        """Test that authentication required for users"""
+        res = client.get(ME_URL)
+
+        assert res.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user"""
+        user, client = create_and_authenticate_user()
+        res = client.get(ME_URL)
+
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data == {
+            "name": user.name,
+            "email": user.email,
+        }
+
+    def test_post_me_not_allowed(self):
+        """Test that POST is not allowed on the me URL"""
+        user, client = create_and_authenticate_user()
+        res = client.post(ME_URL, {})
+
+        assert res.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"name": "new_name"},
+            {"password": "newpassword123"},
+            {"name": "newname", "password": "newpassword123"},
+        ],
+    )
+    def test_update_user_profile(self, payload):
+        """Test updating the user profile for authenticated user"""
+        user, client = create_and_authenticate_user()
+
+        res = client.patch(ME_URL, payload)
+
+        user.refresh_from_db()
+        assert res.status_code == status.HTTP_200_OK
+        if "name" in payload:
+            assert user.name == payload["name"]
+        if "password" in payload:
+            assert user.check_password(payload["password"]) is True
