@@ -15,19 +15,14 @@ TAGS_URL = reverse("recipe:tag-list")
 
 
 @pytest.mark.django_db
-class TestsPublicTagsApi:
-    """Test the publicly available tags API"""
+class TestsPrivateTagsApi:
+    """Test the authorized user tags API"""
 
     def test_login_required(self, client):
         """Test that login required for retrieving tags"""
         res = client.get(TAGS_URL)
 
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-@pytest.mark.django_db
-class TestsPrivateTagsApi:
-    """Test the authorized user tags API"""
 
     def test_retrieve_tags(self):
         """Test retrieving tags"""
