@@ -14,6 +14,8 @@ class Command(BaseCommand):
         User = get_user_model()
         password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
         email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
+        if User.objects.filter(email=email).exists():
+            return
 
         User.objects.create_superuser(
             password=password,

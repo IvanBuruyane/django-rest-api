@@ -14,13 +14,21 @@ from recipe.serializers import TagSerializer
 TAGS_URL = reverse("recipe:tag-list")
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(reset_sequences=True)
 class TestsPrivateTagsApi:
     """Test the authorized user tags API"""
 
-    def test_login_required(self, client):
-        """Test that login required for retrieving tags"""
-        res = client.get(TAGS_URL)
+    @pytest.mark.parametrize("method", ["get", "post", "put", "delete"])
+    def test_login_required(self, client, method):
+        """Test that login is required to access this endpoint"""
+        if method == "get":
+            res = client.get(TAGS_URL)
+        elif method == "post":
+            res = client.post(TAGS_URL)
+        elif method == "put":
+            res = client.put(reverse("recipe:tag-detail", kwargs={"pk": "1"}))
+        elif method == "delete":
+            res = client.delete(reverse("recipe:tag-detail", kwargs={"pk": "1"}))
 
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -52,6 +60,30 @@ class TestsPrivateTagsApi:
         assert len(res.data) == 1
         assert res.data[0]["name"] == tag.name
 
+    def test_retrieve_one_tag(self):
+        """Test retrieving tags"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        Tag.objects.create(user=user, name="Dessert")
+        url = reverse("recipe:tag-detail", kwargs={"pk": "2"})
+
+        res = client.get(url)
+
+        tag = Tag.objects.get(pk=2)
+        serializer = TagSerializer(tag)
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data == serializer.data
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_retrieve_non_existent_tag(self, value):
+        """Test retrieving tags"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        url = reverse("recipe:tag-detail", kwargs={"pk": value})
+
+        res = client.get(url)
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
     def test_create_tag_successful(self):
         """Test creating a new tag"""
         user, client = create_and_authenticate_user()
@@ -71,3 +103,55 @@ class TestsPrivateTagsApi:
         res = client.post(TAGS_URL, payload)
 
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_update_tag_successful(self):
+        """Test updating a new tag"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        url = reverse("recipe:tag-detail", kwargs={"pk": 1})
+        res = client.put(url, {"name": "updated_vegan"})
+        serializer = TagSerializer(Tag.objects.get(id=1))
+
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data == serializer.data
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_update_non_existent_tag(self, value):
+        """Test updating a new tag"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        url = reverse("recipe:tag-detail", kwargs={"pk": value})
+        res = client.put(url, {"name": "updated_vegan"})
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize(
+        "payload",
+        [{"name": ""}, {}, {"name": random_string(n=256)}, {"incorrect_key": "value"}],
+    )
+    def test_update_tag_incorrect_payload(self, payload):
+        """Test updating a new tag"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        url = reverse("recipe:tag-detail", kwargs={"pk": 1})
+        res = client.put(url, payload)
+
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_delete_tag_successful(self):
+        """Test updating a new tag"""
+        user, client = create_and_authenticate_user()
+        Tag.objects.create(user=user, name="Vegan")
+        url = reverse("recipe:tag-detail", kwargs={"pk": 1})
+        res = client.delete(url)
+
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+        assert client.get(url).status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_delete_non_existent_tag(self, value):
+        """Test updating a new tag"""
+        user, client = create_and_authenticate_user()
+        url = reverse("recipe:tag-detail", kwargs={"pk": value})
+        res = client.delete(url)
+
+        assert res.status_code == status.HTTP_404_NOT_FOUND

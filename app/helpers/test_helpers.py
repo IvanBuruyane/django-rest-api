@@ -2,6 +2,7 @@ import random
 import string
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from core.models import Recipe
 
 
 def random_string(chars=string.ascii_uppercase + string.digits, n=10):
@@ -23,3 +24,15 @@ def create_and_authenticate_user():
     client.force_authenticate(user)
 
     return user, client
+
+
+def create_sample_recipe(user, **params):
+    """Create and return a sample recipe"""
+    defaults = {
+        "title": "Sample recipe",
+        "minutes_to_cook": 10,
+        "price": 5.00,
+    }
+    defaults.update(params)
+
+    return Recipe.objects.create(user=user, **defaults)
