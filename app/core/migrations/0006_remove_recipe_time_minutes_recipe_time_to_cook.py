@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_recipe_time_minutes'),
+        ("core", "0005_recipe_time_minutes"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='recipe',
-            name='time_minutes',
+            model_name="recipe",
+            name="time_minutes",
         ),
         migrations.AddField(
-            model_name='recipe',
-            name='time_to_cook',
+            model_name="recipe",
+            name="time_to_cook",
             field=models.IntegerField(default=0),
             preserve_default=False,
         ),

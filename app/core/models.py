@@ -61,8 +61,10 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+
 class Recipe(models.Model):
     """Recipe object"""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     minutes_to_cook = models.IntegerField()
@@ -73,4 +75,3 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
-

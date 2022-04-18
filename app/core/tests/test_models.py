@@ -60,8 +60,7 @@ class TestModels:
             user=create_user(email="test@londonappdev.com", password="123456"),
             title="Steak and mushroom sauce",
             minutes_to_cook=5,
-            price=5.00
+            price=5.00,
         )
 
         assert str(recipe) == recipe.title
-

@@ -12,12 +12,15 @@ services:
     command:
       sh -c "python wait_for_postgres.py &&
       python manage.py migrate &&
+      python manage.py createsuperuser_initial &&
       python manage.py runserver 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - DB_NAME=app
       - DB_USER=postgres
       - DB_PASS=${POSTGRES_PASSWORD}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
     depends_on:
       - db
 

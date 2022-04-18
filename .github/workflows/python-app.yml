@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DJANGO_SUPERUSER_PASSWORD: ${{ secrets.DJANGO_SUPERUSER_PASSWORD }}
+      DJANGO_SUPERUSER_EMAIL: ${{ secrets.DJANGO_SUPERUSER_EMAIL }}
+
 
     steps:
     - uses: actions/checkout@v2
