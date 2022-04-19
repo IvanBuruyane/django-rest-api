@@ -88,7 +88,7 @@ class TestsPrivateTagsApi:
         """Test creating a new tag"""
         user, client = create_and_authenticate_user()
         payload = {"name": "Simple"}
-        client.post(TAGS_URL, payload)
+        client.post(TAGS_URL, payload, format="json")
 
         exists = Tag.objects.filter(user=user, name=payload["name"]).exists()
         assert exists is True
@@ -100,7 +100,7 @@ class TestsPrivateTagsApi:
         payload = {"name": name}
         if not name:
             payload.pop("name")
-        res = client.post(TAGS_URL, payload)
+        res = client.post(TAGS_URL, payload, format="json")
 
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 

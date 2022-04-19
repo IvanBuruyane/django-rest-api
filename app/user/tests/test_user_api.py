@@ -8,6 +8,7 @@ from helpers.test_helpers import (
     create_user,
     create_and_authenticate_user,
 )
+from helpers.test_helpers import create_param_value_pairs
 
 CREATE_USER_URL = reverse("user:create")
 TOKEN_URL = reverse("user:token")
@@ -46,9 +47,9 @@ class TestPublicUserAPI:
 
     @pytest.mark.parametrize(
         "param, value",
-        list(map(lambda el: ("email", el), TestData.INVALID_EMAILS))
-        + list(map(lambda el: ("password", el), ["pwfs", "", None]))
-        + list(map(lambda el: ("name", el), ["fn", "", None, random_string(n=256)])),
+        create_param_value_pairs("email", TestData.INVALID_EMAILS)
+        + create_param_value_pairs("password", ["pwfs", "", None])
+        + create_param_value_pairs("name", ["fn", "", None, random_string(n=256)]),
     )
     def test_create_user_with_invalid_parameter_should_fail(self, client, param, value):
         email = "test_invalid_param@londonappdev.com"

@@ -89,7 +89,7 @@ class TestsPrivateIngredientsAPI:
         """Test creating a new tag"""
         user, client = create_and_authenticate_user()
         payload = {"name": "Potato"}
-        client.post(INGREDIENTS_URL, payload)
+        client.post(INGREDIENTS_URL, payload, format="json")
 
         exists = Ingredient.objects.filter(user=user, name=payload["name"]).exists()
         assert exists is True
@@ -101,7 +101,7 @@ class TestsPrivateIngredientsAPI:
         payload = {"name": name}
         if not name:
             payload.pop("name")
-        res = client.post(INGREDIENTS_URL, payload)
+        res = client.post(INGREDIENTS_URL, payload, format="json")
 
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 

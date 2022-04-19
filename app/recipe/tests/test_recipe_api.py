@@ -12,6 +12,8 @@ from helpers.test_helpers import (
     create_sample_recipe,
     create_sample_tag,
     create_sample_ingredient,
+    create_param_value_pairs,
+    random_string,
 )
 
 
@@ -22,9 +24,17 @@ RECIPES_URL = reverse("recipe:recipe-list")
 class TestsPrivateRecipeApi:
     """Test authenticated recipe API access"""
 
-    def test_required_auth(self, client):
-        """Test the authenticaiton is required"""
-        res = client.get(RECIPES_URL)
+    @pytest.mark.parametrize("method", ["get", "post", "put", "delete"])
+    def test_login_required(self, client, method):
+        """Test that login is required to access this endpoint"""
+        if method == "get":
+            res = client.get(RECIPES_URL)
+        elif method == "post":
+            res = client.post(RECIPES_URL)
+        elif method == "put":
+            res = client.put(reverse("recipe:recipe-detail", kwargs={"pk": "1"}))
+        elif method == "delete":
+            res = client.delete(reverse("recipe:recipe-detail", kwargs={"pk": "1"}))
 
         assert res.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -91,13 +101,15 @@ class TestsPrivateRecipeApi:
             "title": "Chocolate cheesecake",
             "minutes_to_cook": 30,
             "price": 5.00,
+            "tags": [],
+            "ingredients": [],
         }
-        res = client.post(RECIPES_URL, payload)
+        res = client.post(RECIPES_URL, payload, format="json")
 
         assert res.status_code == status.HTTP_201_CREATED
         recipe = Recipe.objects.get(id=res.data["id"])
-        for key in payload.keys():
-            assert payload[key] == getattr(recipe, key)
+        serializer = RecipeDetailSerializer(recipe)
+        assert res.data == serializer.data
 
     def test_create_recipe_with_tags(self):
         """Test creating a recipe with tags"""
@@ -107,10 +119,12 @@ class TestsPrivateRecipeApi:
         payload = {
             "title": "Avocado lime cheesecake",
             "tags": [tag1.id, tag2.id],
+            "ingredients": [],
             "minutes_to_cook": 60,
             "price": 20.00,
+            "link": "https://www.youtube.com"
         }
-        res = client.post(RECIPES_URL, payload)
+        res = client.post(RECIPES_URL, payload, format="json")
 
         assert res.status_code == status.HTTP_201_CREATED
         recipe = Recipe.objects.get(id=res.data["id"])
@@ -125,13 +139,48 @@ class TestsPrivateRecipeApi:
         payload = {
             "title": "Thai prawn red curry",
             "ingredients": [ingredient1.id, ingredient2.id],
+            "tags": [],
             "minutes_to_cook": 20,
             "price": 7.00,
         }
 
-        res = client.post(RECIPES_URL, payload)
+        res = client.post(RECIPES_URL, payload, format="json")
 
         assert res.status_code == status.HTTP_201_CREATED
         recipe = Recipe.objects.get(id=res.data["id"])
         serializer = RecipeDetailSerializer(recipe)
         assert res.data == serializer.data
+
+    @pytest.mark.parametrize(
+        "param, value",
+        create_param_value_pairs("title", ["", None, random_string(n=256), True])
+        + create_param_value_pairs(
+            "minutes_to_cook", ["", None, "dfadf", 3424.3434, False]
+        )
+        + create_param_value_pairs(
+            "price", ["", None, "afadfa", False, 1.122141242141, 12345678921]
+        )
+        + create_param_value_pairs(
+            "tags", ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]]
+        )
+        + create_param_value_pairs(
+            "ingredients",
+            ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]],
+        ) +
+        create_param_value_pairs("link", [12312, "akfjabfa", True, random_string(n=256)])
+    )
+    def test_create_recipe_with_invalid_params(self, param, value):
+        user, client = create_and_authenticate_user()
+        payload = {
+            "title": "Chocolate cheesecake",
+            "minutes_to_cook": 30,
+            "price": 5.00,
+            "tags": [],
+            "ingredients": [],
+        }
+        if value is None:
+            payload.pop(param)
+        else:
+            payload.update({param: value})
+        res = client.post(RECIPES_URL, payload, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
