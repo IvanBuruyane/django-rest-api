@@ -56,3 +56,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return self.serializer_class
 
+    def perform_create(self, serializer):
+        """Create a new recipe"""
+        return serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        request_serializer = serializers.RecipeSerializer(data=request.data)
+        if request_serializer.is_valid():
+            instance = self.perform_create(request_serializer)
+            response_serializer = serializers.RecipeDetailSerializer(instance)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                request_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
