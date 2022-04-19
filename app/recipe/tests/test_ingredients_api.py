@@ -14,8 +14,6 @@ from recipe.serializers import IngredientSerializer
 INGREDIENTS_URL = reverse("recipe:ingredient-list")
 
 
-
-
 @pytest.mark.django_db(reset_sequences=True)
 class TestsPrivateIngredientsAPI:
     """Test ingredients can be retrieved by authorized user"""

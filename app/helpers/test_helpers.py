@@ -2,7 +2,7 @@ import random
 import string
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
-from core.models import Recipe
+from core.models import Recipe, Tag, Ingredient
 
 
 def random_string(chars=string.ascii_uppercase + string.digits, n=10):
@@ -36,3 +36,13 @@ def create_sample_recipe(user, **params):
     defaults.update(params)
 
     return Recipe.objects.create(user=user, **defaults)
+
+
+def create_sample_tag(user, name="Main course"):
+    """Create and return a sample tag"""
+    return Tag.objects.create(user=user, name=name)
+
+
+def create_sample_ingredient(user, name="Cinnamon"):
+    """Create and return a sample ingredient"""
+    return Ingredient.objects.create(user=user, name=name)
