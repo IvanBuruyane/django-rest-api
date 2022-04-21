@@ -18,6 +18,23 @@ from helpers.test_helpers import (
 
 
 RECIPES_URL = reverse("recipe:recipe-list")
+INVALID_PARAMS = (
+    create_param_value_pairs("title", ["", None, random_string(n=256), True])
+    + create_param_value_pairs("minutes_to_cook", ["", None, "dfadf", 3424.3434, False])
+    + create_param_value_pairs(
+        "price", ["", None, "afadfa", False, 1.122141242141, 12345678921]
+    )
+    + create_param_value_pairs(
+        "tags", ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]]
+    )
+    + create_param_value_pairs(
+        "ingredients",
+        ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]],
+    )
+    + create_param_value_pairs("link", [12312, "akfjabfa", True, random_string(n=256)])
+)
+
+print(INVALID_PARAMS)
 
 
 @pytest.mark.django_db(reset_sequences=True)
@@ -122,7 +139,7 @@ class TestsPrivateRecipeApi:
             "ingredients": [],
             "minutes_to_cook": 60,
             "price": 20.00,
-            "link": "https://www.youtube.com"
+            "link": "https://www.youtube.com",
         }
         res = client.post(RECIPES_URL, payload, format="json")
 
@@ -151,24 +168,7 @@ class TestsPrivateRecipeApi:
         serializer = RecipeDetailSerializer(recipe)
         assert res.data == serializer.data
 
-    @pytest.mark.parametrize(
-        "param, value",
-        create_param_value_pairs("title", ["", None, random_string(n=256), True])
-        + create_param_value_pairs(
-            "minutes_to_cook", ["", None, "dfadf", 3424.3434, False]
-        )
-        + create_param_value_pairs(
-            "price", ["", None, "afadfa", False, 1.122141242141, 12345678921]
-        )
-        + create_param_value_pairs(
-            "tags", ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]]
-        )
-        + create_param_value_pairs(
-            "ingredients",
-            ["", None, 1232, "adfadf", True, [1], ["dafad"], [None], [True]],
-        ) +
-        create_param_value_pairs("link", [12312, "akfjabfa", True, random_string(n=256)])
-    )
+    @pytest.mark.parametrize("param, value", INVALID_PARAMS)
     def test_create_recipe_with_invalid_params(self, param, value):
         user, client = create_and_authenticate_user()
         payload = {
@@ -184,3 +184,100 @@ class TestsPrivateRecipeApi:
             payload.update({param: value})
         res = client.post(RECIPES_URL, payload, format="json")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_update_recipe_success(self):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        ingredient1 = create_sample_ingredient(user=user, name="Prawns")
+        ingredient2 = create_sample_ingredient(user=user, name="Ginger")
+        tag1 = create_sample_tag(user=user, name="Supper")
+        updated_payload = {
+            "title": "Avocado lime cheesecake",
+            "tags": [tag1.id],
+            "ingredients": [ingredient1.id, ingredient2.id],
+            "minutes_to_cook": 60,
+            "price": 20.00,
+            "link": "https://www.youtube.com",
+        }
+        url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
+        res = client.put(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        recipe = Recipe.objects.get(id=res.data["id"])
+        serializer = RecipeDetailSerializer(recipe)
+        assert res.data == serializer.data
+
+    @pytest.mark.parametrize("param, value", INVALID_PARAMS)
+    def test_update_recipe_with_invalid_params(self, param, value):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        updated_payload = {
+            "title": "Chocolate cheesecake",
+            "minutes_to_cook": 30,
+            "price": 5.00,
+            "tags": [],
+            "ingredients": [],
+        }
+        if value is None:
+            updated_payload.pop(param)
+        else:
+            updated_payload.update({param: value})
+        url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
+        res = client.put(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "param, value",
+        [
+            ("title", "New title"),
+            ("minutes_to_cook", 30),
+            ("price", 12.43),
+            ("tags", []),
+            ("ingredients", []),
+            ("link", "https://www.youtube.com"),
+        ],
+    )
+    def test_patch_recipe_success(self, param, value):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        if param == "tag":
+            tag1 = create_sample_tag(user=user, name="Supper")
+            value = [tag1.id]
+        elif param == "ingredients":
+            ingredient1 = create_sample_ingredient(user=user, name="Ginger")
+            value = [ingredient1.id]
+        updated_payload = {param: value}
+        url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
+        res = client.patch(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        recipe = Recipe.objects.get(id=res.data["id"])
+        serializer = RecipeDetailSerializer(recipe)
+        assert res.data == serializer.data
+
+    @pytest.mark.parametrize("param, value", INVALID_PARAMS)
+    def test_patch_recipe_with_invalid_params(self, param, value):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        updated_payload = {}
+        updated_payload.update({param: value})
+        url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
+        res = client.patch(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_delete_recipe_successful(self):
+        """Test deleting existent recipe"""
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
+        res = client.delete(url)
+
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+        assert client.get(url).status_code == status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_delete_non_existent_recipe(self, value):
+        """Test deleting non-existent recipe"""
+        user, client = create_and_authenticate_user()
+        url = reverse("recipe:recipe-detail", kwargs={"pk": value})
+        res = client.delete(url)
+
+        assert res.status_code == status.HTTP_404_NOT_FOUND
