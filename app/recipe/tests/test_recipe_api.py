@@ -34,8 +34,6 @@ INVALID_PARAMS = (
     + create_param_value_pairs("link", [12312, "akfjabfa", True, random_string(n=256)])
 )
 
-print(INVALID_PARAMS)
-
 
 @pytest.mark.django_db(reset_sequences=True)
 class TestsPrivateRecipeApi:
@@ -203,6 +201,7 @@ class TestsPrivateRecipeApi:
         res = client.put(url, updated_payload, format="json")
         assert res.status_code == status.HTTP_200_OK
         recipe = Recipe.objects.get(id=res.data["id"])
+        recipe.refresh_from_db()
         serializer = RecipeDetailSerializer(recipe)
         assert res.data == serializer.data
 
@@ -224,6 +223,21 @@ class TestsPrivateRecipeApi:
         url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
         res = client.put(url, updated_payload, format="json")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_update_non_existent_recipe(self, value):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        updated_payload = {
+            "title": "Chocolate cheesecake",
+            "minutes_to_cook": 30,
+            "price": 5.00,
+            "tags": [],
+            "ingredients": [],
+        }
+        url = reverse("recipe:recipe-detail", kwargs={"pk": value})
+        res = client.put(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.parametrize(
         "param, value",
@@ -250,6 +264,7 @@ class TestsPrivateRecipeApi:
         res = client.patch(url, updated_payload, format="json")
         assert res.status_code == status.HTTP_200_OK
         recipe = Recipe.objects.get(id=res.data["id"])
+        recipe.refresh_from_db()
         serializer = RecipeDetailSerializer(recipe)
         assert res.data == serializer.data
 
@@ -262,6 +277,15 @@ class TestsPrivateRecipeApi:
         url = reverse("recipe:recipe-detail", kwargs={"pk": 1})
         res = client.patch(url, updated_payload, format="json")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize("value", [2, "efef"])
+    def test_patch_non_existent_recipe(self, value):
+        user, client = create_and_authenticate_user()
+        create_sample_recipe(user=user)
+        updated_payload = {"title": "Chocolate cheesecake"}
+        url = reverse("recipe:recipe-detail", kwargs={"pk": value})
+        res = client.patch(url, updated_payload, format="json")
+        assert res.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_recipe_successful(self):
         """Test deleting existent recipe"""

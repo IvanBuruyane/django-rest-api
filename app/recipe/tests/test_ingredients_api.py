@@ -108,10 +108,11 @@ class TestsPrivateIngredientsAPI:
     def test_update_ingredient_successful(self):
         """Test updating a new tag"""
         user, client = create_and_authenticate_user()
-        Ingredient.objects.create(user=user, name="Cucumber")
+        ingredient = Ingredient.objects.create(user=user, name="Cucumber")
         url = reverse("recipe:ingredient-detail", kwargs={"pk": 1})
         res = client.put(url, {"name": "updated_cucumber"})
-        serializer = IngredientSerializer(Ingredient.objects.get(id=1))
+        ingredient.refresh_from_db()
+        serializer = IngredientSerializer(ingredient)
 
         assert res.status_code == status.HTTP_200_OK
         assert res.data == serializer.data

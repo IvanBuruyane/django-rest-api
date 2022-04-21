@@ -107,10 +107,11 @@ class TestsPrivateTagsApi:
     def test_update_tag_successful(self):
         """Test updating a new tag"""
         user, client = create_and_authenticate_user()
-        Tag.objects.create(user=user, name="Vegan")
+        tag = Tag.objects.create(user=user, name="Vegan")
         url = reverse("recipe:tag-detail", kwargs={"pk": 1})
         res = client.put(url, {"name": "updated_vegan"})
-        serializer = TagSerializer(Tag.objects.get(id=1))
+        tag.refresh_from_db()
+        serializer = TagSerializer(tag)
 
         assert res.status_code == status.HTTP_200_OK
         assert res.data == serializer.data
