@@ -11,6 +11,7 @@ pytest = "*"
 pytest-django = "*"
 black = "*"
 psycopg2 = "*"
+pillow = "*"
 
 [dev-packages]
 

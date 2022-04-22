@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from test_data import TestData
 from helpers.test_helpers import create_user
 from core import models
+from unittest.mock import patch
 
 
 @pytest.mark.django_db
@@ -64,3 +65,13 @@ class TestModels:
         )
 
         assert str(recipe) == recipe.title
+
+    @patch("uuid.uuid4")
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = "test-uuid"
+        mock_uuid.return_value = uuid
+        file_path = models.recipe_image_file_path(None, "myimage.jpg")
+
+        exp_path = f"uploads/recipe/{uuid}.jpg"
+        assert file_path == exp_path
