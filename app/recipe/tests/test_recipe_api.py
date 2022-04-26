@@ -1,4 +1,5 @@
 import pytest
+import os
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
@@ -14,6 +15,7 @@ from helpers.test_helpers import (
     create_sample_ingredient,
     create_param_value_pairs,
     random_string,
+    add_image_to_the_recipe,
 )
 
 
@@ -121,7 +123,7 @@ class TestsPrivateRecipeApi:
         }
         res = client.post(RECIPES_URL, payload, format="json")
 
-        assert res.status_code == status.HTTP_201_CREATED
+        assert res.status_code == status.HTTP_201_CREATED, res.data
         recipe = Recipe.objects.get(id=res.data["id"])
         serializer = RecipeDetailSerializer(recipe)
         assert res.data == serializer.data
@@ -305,3 +307,74 @@ class TestsPrivateRecipeApi:
         res = client.delete(url)
 
         assert res.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db(reset_sequences=True)
+class TestsRecipeImageUpload:
+    @pytest.mark.parametrize(
+        "image_ext",
+        [
+            "BMP",
+            "DDS",
+            "DIB",
+            "EPS",
+            "GIF",
+            "ICNS",
+            "IM",
+            "JPEG",
+            "PCX",
+            "PNG",
+            "PPM",
+            "SGI",
+            "SPIDER",
+            "TGA",
+            "TIFF",
+            "WebP",
+        ],
+    )
+    def test_upload_image_to_recipe(self, create_user_and_recipe, image_ext):
+        """Test uploading an image to recipe"""
+        user, client, recipe = create_user_and_recipe
+        url = reverse("recipe:recipe-upload-image", args=[recipe.id])
+        res = add_image_to_the_recipe(client, url, image_ext)
+
+        recipe.refresh_from_db()
+        assert res.status_code == status.HTTP_200_OK, res.data
+        assert "image" in res.data
+        assert os.path.exists(recipe.image.path) is True
+
+    def test_update_recipe_image(self, create_user_and_recipe):
+        """Test uploading an image to recipe"""
+        user, client, recipe = create_user_and_recipe
+        url = reverse("recipe:recipe-upload-image", args=[recipe.id])
+        add_image_to_the_recipe(client, url, "JPEG")
+        recipe.refresh_from_db()
+        res = add_image_to_the_recipe(client, url, "JPEG")
+        recipe.refresh_from_db()
+        assert res.status_code == status.HTTP_200_OK, res.data
+        assert "image" in res.data
+        assert os.path.exists(recipe.image.path) is True
+        assert len(os.listdir(os.path.split(recipe.image.path)[0])) == 1
+
+    @pytest.mark.parametrize("value", ["afadfnjk", "", 1, 2.242424, False])
+    def test_upload_image_bad_request(self, create_user_and_recipe, value):
+        """Test uploading an invalid image"""
+        user, client, recipe = create_user_and_recipe
+        recipe = create_sample_recipe(user=user)
+        url = reverse("recipe:recipe-upload-image", args=[recipe.id])
+        res = client.post(url, {"image": value}, format="multipart")
+
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_delete_image_from_recipe(self, create_user_and_recipe):
+        """Test uploading an image to recipe"""
+        user, client, recipe = create_user_and_recipe
+        url = reverse("recipe:recipe-upload-image", args=[recipe.id])
+        add_image_to_the_recipe(client, url, "JPEG")
+        recipe.refresh_from_db()
+        path = recipe.image.path
+        delete_url = reverse("recipe:recipe-delete-image", args=[recipe.id])
+        res = client.delete(delete_url)
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+        recipe.refresh_from_db()
+        assert len(os.listdir(os.path.split(path)[0])) == 0

@@ -1,8 +1,11 @@
 import random
 import string
-from typing import Any, List, Tuple
+from typing import List, Tuple
+import tempfile
+from PIL import Image
 
 from django.contrib.auth import get_user_model
+from rest_framework.response import Response
 from rest_framework.test import APIClient
 from core.models import Recipe, Tag, Ingredient
 
@@ -54,3 +57,12 @@ def create_sample_ingredient(user: User, name: str = "Cinnamon") -> Ingredient:
 
 def create_param_value_pairs(param: str, values: List) -> List:
     return list(map(lambda el: (param, el), values))
+
+
+def add_image_to_the_recipe(client: APIClient, url: str, image_ext: str) -> Response:
+    with tempfile.NamedTemporaryFile(suffix="." + image_ext.lower()) as ntf:
+        img = Image.new("RGB", (500, 500))
+        img.save(ntf, format=image_ext)
+        ntf.seek(0)
+        res = client.post(url, {"image": ntf}, format="multipart")
+    return res

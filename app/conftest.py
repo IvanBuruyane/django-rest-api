@@ -1,6 +1,9 @@
 import pytest
 from django.contrib.auth import get_user_model
-from helpers.test_helpers import create_user
+from helpers.test_helpers import (
+    create_and_authenticate_user,
+    create_sample_recipe,
+)
 
 
 @pytest.fixture(scope="function")
@@ -15,14 +18,9 @@ def setup_admin(client):
     return {"admin_user": admin_user, "user": user}
 
 
-# @pytest.fixture(scope="function")
-# def create_and_authenticate_user(client):
-#     user = create_user(
-#         email="test@londonappdev.com",
-#         password="testpass",
-#         name="name",
-#     )
-#     client.login(username="test@londonappdev.com", password="testpass")
-#
-#
-#     return user
+@pytest.fixture()
+def create_user_and_recipe():
+    user, client = create_and_authenticate_user()
+    recipe = create_sample_recipe(user=user)
+    yield user, client, recipe
+    recipe.image.delete()

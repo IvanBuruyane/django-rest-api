@@ -1,6 +1,9 @@
-from rest_framework import viewsets, mixins, status
+import os
+
+from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from core.models import Tag, Ingredient, Recipe
 
@@ -53,6 +56,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Return appropriate serializer class"""
         if self.action == "retrieve":
             return serializers.RecipeDetailSerializer
+        elif self.action == "upload_image":
+            return serializers.RecipeImageSerializer
 
         return self.serializer_class
 
@@ -96,3 +101,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         response_serializer = serializers.RecipeDetailSerializer(instance)
         return Response(response_serializer.data)
+
+    @action(methods=["POST"], detail=True, url_path="upload-image")
+    def upload_image(self, request, pk=None):
+        """Upload an image to a recipe"""
+        recipe = self.get_object()
+        try:
+            path = recipe.image.path
+        except:
+            path = None
+        if path:
+            os.remove(path)
+        serializer = self.get_serializer(recipe, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            response_serializer = serializers.RecipeDetailSerializer(recipe)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=["DELETE"], detail=True, url_path="delete-image")
+    def delete_image(self, request, pk=None):
+        """Upload an image to a recipe"""
+        recipe = self.get_object()
+        path = recipe.image.path
+        recipe.image = None
+        os.remove(path)
+        recipe.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
