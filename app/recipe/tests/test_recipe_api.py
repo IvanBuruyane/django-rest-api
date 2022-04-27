@@ -378,3 +378,5 @@ class TestsRecipeImageUpload:
         assert res.status_code == status.HTTP_204_NO_CONTENT
         recipe.refresh_from_db()
         assert len(os.listdir(os.path.split(path)[0])) == 0
+
+
