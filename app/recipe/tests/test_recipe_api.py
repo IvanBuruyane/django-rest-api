@@ -308,6 +308,74 @@ class TestsPrivateRecipeApi:
 
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_filter_recipes_by_tags(self):
+        """Test returning recipes with specific tags"""
+        user, client = create_and_authenticate_user()
+        recipe1 = create_sample_recipe(user=user, title="Thai vegetable curry")
+        recipe2 = create_sample_recipe(user=user, title="Aubergine with tahini")
+        tag1 = create_sample_tag(user=user, name="Vegan")
+        tag2 = create_sample_tag(user=user, name="Vegetarian")
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+        recipe3 = create_sample_recipe(user=user, title="Fish and chips")
+
+        res = client.get(RECIPES_URL, {"tags": f"{tag1.id},{tag2.id}"})
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+        assert serializer1.data in res.data
+        assert serializer2.data in res.data
+        assert serializer3.data not in res.data
+
+    def test_filter_recipes_by_ingredients(self):
+        """Test returning recipes with specific ingredients"""
+        user, client = create_and_authenticate_user()
+        recipe1 = create_sample_recipe(user=user, title="Posh beans on toast")
+        recipe2 = create_sample_recipe(user=user, title="Chicken cacciatore")
+        ingredient1 = create_sample_ingredient(user=user, name="Feta cheese")
+        ingredient2 = create_sample_ingredient(user=user, name="Chicken")
+        recipe1.ingredients.add(ingredient1)
+        recipe2.ingredients.add(ingredient2)
+        recipe3 = create_sample_recipe(user=user, title="Steak and mushrooms")
+
+        res = client.get(
+            RECIPES_URL, {"ingredients": f"{ingredient1.id},{ingredient2.id}"}
+        )
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+        assert serializer1.data in res.data
+        assert serializer2.data in res.data
+        assert serializer3.data not in res.data
+
+    def test_filter_recipes_by_tags_and_ingredients(self):
+        """Test returning recipes with specific ingredients"""
+        user, client = create_and_authenticate_user()
+        recipe1 = create_sample_recipe(user=user, title="Posh beans on toast")
+        recipe2 = create_sample_recipe(user=user, title="Chicken cacciatore")
+        ingredient1 = create_sample_ingredient(user=user, name="Feta cheese")
+        tag2 = create_sample_tag(user=user, name="Test_tag")
+        ingredient3 = create_sample_ingredient(user=user, name="Cucumber")
+        tag3 = create_sample_tag(user=user, name="Tag3")
+        recipe1.ingredients.add(ingredient1)
+        recipe2.tags.add(tag2)
+        recipe3 = create_sample_recipe(user=user, title="Steak and mushrooms")
+        recipe3.ingredients.add(ingredient3)
+        recipe3.tags.add(tag3)
+
+        res = client.get(
+            RECIPES_URL, {"ingredients": f"{ingredient1.id}", "tags": f"{tag2.id}"}
+        )
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+        assert serializer1.data in res.data
+        assert serializer2.data in res.data
+        assert serializer3.data not in res.data
+
 
 @pytest.mark.django_db(reset_sequences=True)
 class TestsRecipeImageUpload:
@@ -378,5 +446,3 @@ class TestsRecipeImageUpload:
         assert res.status_code == status.HTTP_204_NO_CONTENT
         recipe.refresh_from_db()
         assert len(os.listdir(os.path.split(path)[0])) == 0
-
-

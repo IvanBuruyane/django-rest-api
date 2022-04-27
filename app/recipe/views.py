@@ -1,5 +1,6 @@
 import os
 
+from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -50,7 +51,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
-        return self.queryset.filter(user=self.request.user).order_by("-id")
+        queryset = self.queryset.filter(user=self.request.user).order_by("-id")
+        tags = self.request.query_params.get("tags")
+        ingredients = self.request.query_params.get("ingredients")
+        tags_list = tags.split(",") if self.request.query_params.get("tags") else []
+        ingredients_list = ingredients.split(",") if self.request.query_params.get("ingredients") else []
+        final_queryset = (
+            queryset.filter(
+                Q(tags__id__in=tags_list) | Q(ingredients__id__in=ingredients_list)
+            )
+            if (tags or ingredients)
+            else queryset
+        )
+
+        return final_queryset
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
