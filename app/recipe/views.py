@@ -58,7 +58,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = self.queryset.filter(user=self.request.user).order_by("-id")
         tags = self.request.query_params.get("tags")
         ingredients = self.request.query_params.get("ingredients")
-        tags_list = tags.split(",") if ingredients else []
+        tags_list = tags.split(",") if tags else []
         ingredients_list = ingredients.split(",") if ingredients else []
         final_queryset = (
             queryset.filter(

@@ -28,10 +28,6 @@ jobs:
     - name: Install docker-compose
       run: |
         pip install docker-compose
-
-#    - name: Check the linting
-#      run: |
-#        docker-compose run --rm app sh -c "flake8"
     - name: Test with pytest
       run: |
         docker-compose run --rm app sh -c "python wait_for_postgres.py && pytest -s -v"
