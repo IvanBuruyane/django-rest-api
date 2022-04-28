@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-from core.models import Ingredient
+from core.models import Ingredient, Recipe
 from helpers.test_helpers import create_and_authenticate_user, random_string
 
 from recipe.serializers import IngredientSerializer
@@ -157,3 +157,42 @@ class TestsPrivateIngredientsAPI:
         res = client.delete(url)
 
         assert res.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_retrieve_ingredients_assigned_to_recipes(self):
+        """Test filtering tags by those assigned to recipes"""
+        user, client = create_and_authenticate_user()
+        tag1 = Ingredient.objects.create(user=user, name="Apples")
+        tag2 = Ingredient.objects.create(user=user, name="Eggs")
+        recipe = Recipe.objects.create(
+            title="Coriander eggs on toast",
+            minutes_to_cook=10,
+            price=5.00,
+            user=user,
+        )
+        recipe.ingredients.add(tag1)
+
+        res = client.get(INGREDIENTS_URL, {"assigned_only": 1})
+
+        serializer1 = IngredientSerializer(tag1)
+        serializer2 = IngredientSerializer(tag2)
+        assert serializer1.data in res.data
+        assert serializer2.data not in res.data
+
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+        user, client = create_and_authenticate_user()
+        ingredient = Ingredient.objects.create(user=user, name="Tomatoes")
+        Ingredient.objects.create(user=user, name="Meat")
+        recipe1 = Recipe.objects.create(
+            title="Pancakes", minutes_to_cook=5, price=3.00, user=user
+        )
+        recipe1.ingredients.add(ingredient)
+        recipe2 = Recipe.objects.create(
+            title="Porridge", minutes_to_cook=3, price=2.00, user=user
+        )
+        recipe2.ingredients.add(ingredient)
+
+        res = client.get(INGREDIENTS_URL, {"assigned_only": 1})
+
+        assert len(res.data) == 1
+        assert IngredientSerializer(ingredient).data in res.data

@@ -20,7 +20,11 @@ class BaseRecipeAttrViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
-        return self.queryset.filter(user=self.request.user).order_by("-name")
+        queryset = self.queryset.filter(user=self.request.user).order_by("-name")
+        assigned_only = bool(int(self.request.query_params.get("assigned_only", 0)))
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False).distinct()
+        return queryset
 
     def perform_create(self, serializer):
         """Create a new object"""
@@ -54,8 +58,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = self.queryset.filter(user=self.request.user).order_by("-id")
         tags = self.request.query_params.get("tags")
         ingredients = self.request.query_params.get("ingredients")
-        tags_list = tags.split(",") if self.request.query_params.get("tags") else []
-        ingredients_list = ingredients.split(",") if self.request.query_params.get("ingredients") else []
+        tags_list = tags.split(",") if ingredients else []
+        ingredients_list = ingredients.split(",") if ingredients else []
         final_queryset = (
             queryset.filter(
                 Q(tags__id__in=tags_list) | Q(ingredients__id__in=ingredients_list)
